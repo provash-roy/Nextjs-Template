@@ -3,14 +3,14 @@ import Link from "next/link";
 
 export default function Logo() {
   return (
-    <Link href="/" className="flex items-center">
+    <Link href="/" className="relative w-15 h-16  flex items-center">
       <Image
         src="/images/logo.png"
-        width={70}
-        height={30}
         alt="Logo name"
-        className="object-cover"
-        priority
+        fill
+        style={{ objectFit: "contain" }}
+        loading="eager"
+        sizes="(max-width: 768px) 50vw, 70px"
       />
     </Link>
   );
