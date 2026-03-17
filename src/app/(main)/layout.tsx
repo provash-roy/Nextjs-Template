@@ -1,4 +1,6 @@
-
+"use client";
+import Container from "@/components/Container";
+import Navbar from "@/components/navbar";
 import { SessionProvider } from "next-auth/react";
 
 export default function MainLayout({
@@ -6,5 +8,10 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <Navbar />
+      {children}
+    </SessionProvider>
+  );
 }

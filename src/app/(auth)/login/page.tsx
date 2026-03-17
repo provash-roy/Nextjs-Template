@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,9 +13,60 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { FcGoogle } from "react-icons/fc";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
+// ---------------- Zod Schema ----------------
+const schema = z.object({
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
+type LoginFormData = z.infer<typeof schema>;
+
+// ---------------- Component ----------------
 export default function Login() {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    setLoading(true);
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+      });
+
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Login successful!");
+        reset();
+        router.replace("/"); // redirect to home
+      }
+    } catch (error) {
+      toast.error("Something went wrong!");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-md shadow-xl">
@@ -27,21 +80,24 @@ export default function Login() {
         </CardHeader>
 
         <CardContent>
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label>Email</Label>
               <Input
-                id="email"
                 type="email"
                 placeholder="m@example.com"
-                required
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
             </div>
 
+            {/* Password */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-
+                <Label>Password</Label>
                 <Link
                   href="/forgot-password"
                   className="text-sm text-muted-foreground hover:underline"
@@ -49,24 +105,33 @@ export default function Login() {
                   Forgot password?
                 </Link>
               </div>
-
-              <Input id="password" type="password" required />
+              <Input type="password" {...register("password")} />
+              {errors.password && (
+                <p className="text-sm text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-4">
-          <Button variant="outline" className="w-full gap-2">
+          {/* ✅ Google Login */}
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => signIn("google", { callbackUrl: "/" })} // redirect home after login
+          >
             <FcGoogle className="h-5 w-5" />
             Continue with Google
           </Button>
 
           <p className="text-sm text-muted-foreground text-center">
-            Don&#39;t have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href="/register"
               className="font-medium text-primary hover:underline"

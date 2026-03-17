@@ -1,0 +1,17 @@
+import Image from "next/image";
+import Link from "next/link";
+
+export default function Logo() {
+  return (
+    <Link href="/" className="flex items-center">
+      <Image
+        src="/images/logo.png"
+        width={70}
+        height={30}
+        alt="Logo name"
+        className="object-cover"
+        priority
+      />
+    </Link>
+  );
+}
